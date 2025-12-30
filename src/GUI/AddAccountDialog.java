@@ -204,6 +204,10 @@ public class AddAccountDialog extends JDialog {
                 if (!Validator.isValidDate(dateStr)) {
                     JOptionPane.showMessageDialog(this, "Ngày tháng không hợp lệ (dd/MM/yyyy)!"); return;
                 }
+                if (Validator.isFutureDate(dateStr)) {
+                    JOptionPane.showMessageDialog(this, "Ngày gửi không được lớn hơn ngày hiện tại!");
+                    return;
+                }
                 if (!Validator.isPositiveNumber(rateStr) || !Validator.isPositiveNumber(termStr)) {
                     JOptionPane.showMessageDialog(this, "Lãi suất/Kỳ hạn phải dương!"); return;
                 }

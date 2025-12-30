@@ -2,6 +2,7 @@ package src.Validate;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.regex.Pattern;
 
 public class Validator {
@@ -41,5 +42,17 @@ public class Validator {
     // 4. Kiểm tra chuỗi rỗng
     public static boolean isEmpty(String str) {
         return str == null || str.trim().isEmpty();
+    }
+    public static boolean isFutureDate(String dateStr) {
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+        sdf.setLenient(false);
+        try {
+            Date inputDate = sdf.parse(dateStr);
+            Date today = new Date();
+            return inputDate.after(today);
+
+        } catch (ParseException e) {
+            return false;
+        }
     }
 }
