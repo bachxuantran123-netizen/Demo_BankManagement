@@ -1,6 +1,8 @@
 package src.GUI;
 
 import src.DAO.UserDAO;
+import src.Utils.UserSession;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -30,8 +32,10 @@ public class LoginFrame extends JFrame {
         txtUser = new JTextField();
         txtPass = new JPasswordField();
 
-        panelCenter.add(new JLabel("Username:")); panelCenter.add(txtUser);
-        panelCenter.add(new JLabel("Password:")); panelCenter.add(txtPass);
+        panelCenter.add(new JLabel("Username:"));
+        panelCenter.add(txtUser);
+        panelCenter.add(new JLabel("Password:"));
+        panelCenter.add(txtPass);
         add(panelCenter, BorderLayout.CENTER);
 
         // Nút bấm
@@ -40,12 +44,13 @@ public class LoginFrame extends JFrame {
         panelBot.add(btnLogin);
         add(panelBot, BorderLayout.SOUTH);
 
-        // SỰ KIỆN NÚT LOGIN (Quan trọng nhất)
+        // SỰ KIỆN NÚT LOGIN
         btnLogin.addActionListener(e -> {
             String user = txtUser.getText();
             String pass = new String(txtPass.getPassword()); // Lấy mật khẩu từ JPasswordField
 
             if (userDAO.checkLogin(user, pass)) {
+                UserSession.setCurrentUser(user);
                 JOptionPane.showMessageDialog(this, "Đăng nhập thành công!");
 
                 // --- CHUYỂN CẢNH ---

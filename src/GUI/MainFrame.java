@@ -4,6 +4,7 @@ import src.DAO.AccountDAO;
 import src.Entities.*;
 import src.Exceptions.NotFoundBankAccountException;
 import src.Utils.Exporter;
+import src.Utils.UserSession;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -25,7 +26,7 @@ public class MainFrame extends JFrame {
 
     private void initUI() {
         setTitle("Hệ Thống Quản Lý Ngân Hàng - Final Project");
-        setSize(1100, 650);
+        setSize(1150, 650);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
@@ -37,17 +38,21 @@ public class MainFrame extends JFrame {
         lblTitle.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
         add(lblTitle, BorderLayout.NORTH);
 
-        // --- 2. BẢNG DỮ LIỆU (ĐÃ THÊM CỘT KỲ HẠN) ---
-        String[] columns = {"ID", "Mã TK", "Chủ TK", "Loại TK", "Ngày Tạo", "Chi Tiết 1", "Chi Tiết 2", "Kỳ hạn"};
+        // --- 2. BẢNG DỮ LIỆU ---
+        String[] columns = {"ID", "Mã TK", "Chủ TK", "CCCD", "Loại TK", "Ngày Tạo", "Chi Tiết 1", "Chi Tiết 2", "Kỳ hạn"};
         tableModel = new DefaultTableModel(columns, 0);
         table = new JTable(tableModel);
         table.setRowHeight(28);
         table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 14));
 
         table.getColumnModel().getColumn(0).setPreferredWidth(40);  // ID
-        table.getColumnModel().getColumn(1).setPreferredWidth(100); // Mã
-        table.getColumnModel().getColumn(2).setPreferredWidth(150); // Tên
+        table.getColumnModel().getColumn(1).setPreferredWidth(100); // Mã TK
+        table.getColumnModel().getColumn(2).setPreferredWidth(140); // Tên
+        table.getColumnModel().getColumn(3).setPreferredWidth(100); // CCCD (Mới)
+        table.getColumnModel().getColumn(4).setPreferredWidth(90);  // Loại
         table.getColumnModel().getColumn(7).setPreferredWidth(60);  // Kỳ hạn
+        table.getColumnModel().getColumn(8).setPreferredWidth(60);  // Kỳ hạn
 
         add(new JScrollPane(table), BorderLayout.CENTER);
 
@@ -66,23 +71,32 @@ public class MainFrame extends JFrame {
         // 3b. Chức năng
         JPanel panelAction = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton btnAdd = new JButton("Thêm Mới");
-        JButton btnEdit = new JButton("Cập Nhật"); // Nút Sửa mới thêm
+        JButton btnEdit = new JButton("Cập Nhật");
         JButton btnDelete = new JButton("Xóa");
         JButton btnRefresh = new JButton("Làm mới");
         JButton btnExport = new JButton("Xuất Excel");
+        JButton btnLogs = new JButton("Xem Nhật ký");
+        JButton btnLogout = new JButton("Đăng xuất");
 
         panelAction.add(btnAdd);
         panelAction.add(btnEdit);
         panelAction.add(btnDelete);
         panelAction.add(btnRefresh);
-        panelAction.add(Box.createHorizontalStrut(10));
+        panelAction.add(Box.createHorizontalStrut(15));
         panelAction.add(btnExport);
+        panelAction.add(btnLogs);
+        panelAction.add(Box.createHorizontalStrut(5));
+        panelAction.add(btnLogout);
 
         panelBot.add(panelSearch, BorderLayout.WEST);
         panelBot.add(panelAction, BorderLayout.EAST);
         add(panelBot, BorderLayout.SOUTH);
 
         // --- 4. XỬ LÝ SỰ KIỆN ---
+
+        btnLogs.addActionListener(e -> {
+            new LogListDialog(this).setVisible(true);
+        });
 
         btnRefresh.addActionListener(e -> {
             txtSearch.setText("");
@@ -111,11 +125,7 @@ public class MainFrame extends JFrame {
                 JOptionPane.showMessageDialog(this, "Vui lòng chọn dòng cần sửa!");
                 return;
             }
-
-            // Lấy mã từ bảng
             String code = (String) tableModel.getValueAt(selectedRow, 1);
-
-            // Lấy object đầy đủ từ DB để nạp vào form sửa
             List<BankAccount> list = accountDAO.searchAccounts(code);
             if (!list.isEmpty()) {
                 BankAccount target = list.get(0);
@@ -143,12 +153,22 @@ public class MainFrame extends JFrame {
                     JOptionPane.showMessageDialog(this, "Xóa thành công!");
                     loadData();
                 } catch (NotFoundBankAccountException ex) {
-                    JOptionPane.showMessageDialog(this, ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage());
                 }
             }
         });
 
         btnExport.addActionListener(e -> exportToCSV());
+
+        btnLogout.addActionListener(e -> {
+            int confirm = JOptionPane.showConfirmDialog(this,
+                    "Bạn có chắc muốn đăng xuất?", "Đăng xuất", JOptionPane.YES_NO_OPTION);
+            UserSession.clear();
+            if (confirm == JOptionPane.YES_OPTION) {
+                new LoginFrame().setVisible(true);
+                this.dispose();
+            }
+        });
     }
 
     private void loadData() {
@@ -168,7 +188,12 @@ public class MainFrame extends JFrame {
         if (acc instanceof SavingsAccount) {
             SavingsAccount sa = (SavingsAccount) acc;
             row = new Object[]{
-                    acc.getId(), acc.getAccountCode(), acc.getAccountName(), "TIẾT KIỆM", acc.getCreationDate(),
+                    acc.getId(),
+                    acc.getAccountCode(),
+                    acc.getOwnerName(),
+                    acc.getCitizenId(),
+                    "TIẾT KIỆM",
+                    acc.getCreationDate(),
                     "Gửi: " + String.format("%,.0f", sa.getDepositAmount()),
                     "Lãi: " + sa.getInterestRate() + "%",
                     sa.getTerm() + " tháng"
@@ -176,7 +201,12 @@ public class MainFrame extends JFrame {
         } else {
             PaymentAccount pa = (PaymentAccount) acc;
             row = new Object[]{
-                    acc.getId(), acc.getAccountCode(), acc.getAccountName(), "THANH TOÁN", acc.getCreationDate(),
+                    acc.getId(),
+                    acc.getAccountCode(),
+                    acc.getOwnerName(),
+                    acc.getCitizenId(),
+                    "THANH TOÁN",
+                    acc.getCreationDate(),
                     "Thẻ: " + pa.getCardNumber(),
                     "Số dư: " + String.format("%,.0f", pa.getBalance()),
                     "" // Thanh toán không có kỳ hạn nên để trống
@@ -200,7 +230,7 @@ public class MainFrame extends JFrame {
                 JOptionPane.showMessageDialog(this, "Xuất file thành công!");
             } catch (IOException ex) {
                 ex.printStackTrace();
-                JOptionPane.showMessageDialog(this, "Lỗi khi ghi file: " + ex.getMessage());
+                JOptionPane.showMessageDialog(this, "Lỗi khi xuất file: " + ex.getMessage());
             }
         }
     }

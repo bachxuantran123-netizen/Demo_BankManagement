@@ -6,7 +6,6 @@ import java.util.Date;
 import java.util.regex.Pattern;
 
 public class Validator {
-    // Giữ nguyên các REGEX chuẩn của em
     private static final String REGEX_ACCOUNT_CODE = "^\\d{9}$";
     private static final String REGEX_DATE = "^\\d{2}/\\d{2}/\\d{4}$";
 
