@@ -1,9 +1,7 @@
 package src.GUI;
 
 import src.DAO.AccountDAO;
-import src.Entities.BankAccount;
-import src.Entities.PaymentAccount;
-import src.Entities.SavingsAccount;
+import src.Entities.*;
 import src.Validate.Validator;
 
 import javax.swing.*;
@@ -18,14 +16,13 @@ import java.util.Date;
 
 public class AddAccountDialog extends JDialog {
     private JTextField txtCode, txtName;
+    private JTextField txtCitizenId;
     private JComboBox<String> cbType;
     private JFormattedTextField txtDepAmount;
-    private JFormattedTextField txtDepDate;
-    private JTextField txtRate, txtTerm;
-    private JTextField txtCardNum;
     private JFormattedTextField txtBalance;
+    private JFormattedTextField txtDepDate;
+    private JTextField txtRate, txtTerm, txtCardNum;
     private JPanel panelCenter;
-    private JButton btnSave;
     private AccountDAO accountDAO;
     private boolean isSuccess = false;
     private boolean isEditMode = false;
@@ -48,33 +45,35 @@ public class AddAccountDialog extends JDialog {
     }
 
     private void initUI() {
-        setSize(450, 550);
+        setSize(450, 600);
         setLocationRelativeTo(getParent());
         setLayout(new BorderLayout());
 
-        // --- 1. THÔNG TIN CHUNG ---
-        JPanel panelCommon = new JPanel(new GridLayout(3, 2, 10, 10));
+        JPanel panelCommon = new JPanel(new GridLayout(4, 2, 10, 10));
         panelCommon.setBorder(BorderFactory.createTitledBorder("Thông tin chung"));
 
         txtCode = new JTextField();
         txtName = new JTextField();
+        txtCitizenId = new JTextField();
         cbType = new JComboBox<>(new String[]{"Savings Account", "Payment Account"});
 
-        panelCommon.add(new JLabel("Mã Tài Khoản:")); panelCommon.add(txtCode);
-        panelCommon.add(new JLabel("Tên Chủ TK:"));   panelCommon.add(txtName);
-        panelCommon.add(new JLabel("Loại TK:"));      panelCommon.add(cbType);
+        panelCommon.add(new JLabel("Mã Tài Khoản:"));
+        panelCommon.add(txtCode);
+        panelCommon.add(new JLabel("Số CCCD:"));
+        panelCommon.add(txtCitizenId);
+        panelCommon.add(new JLabel("Tên Chủ TK:"));
+        panelCommon.add(txtName);
+        panelCommon.add(new JLabel("Loại TK:"));
+        panelCommon.add(cbType);
 
-        // --- CẤU HÌNH ĐỊNH DẠNG SỐ (TIỀN TỆ) ---
-        // Tạo formatter để tự động thêm dấu chấm (vd: 1.000.000) và chỉ nhận số
         NumberFormat format = NumberFormat.getIntegerInstance();
-        format.setGroupingUsed(true); // Bật tính năng gom nhóm hàng nghìn
+        format.setGroupingUsed(true);
 
         NumberFormatter currencyFormatter = new NumberFormatter(format);
         currencyFormatter.setValueClass(Long.class); // Giá trị trả về là Long
         currencyFormatter.setAllowsInvalid(false);   // Không cho nhập ký tự lạ
         currencyFormatter.setMinimum(0L);            // Không cho nhập số âm
 
-        // --- 2. THÔNG TIN RIÊNG ---
         panelCenter = new JPanel(new CardLayout());
         JPanel panelSavings = new JPanel(new GridLayout(4, 2, 10, 10));
         panelSavings.setBorder(BorderFactory.createTitledBorder("Chi tiết Tiết Kiệm"));
@@ -83,7 +82,6 @@ public class AddAccountDialog extends JDialog {
         txtDepAmount = new JFormattedTextField(currencyFormatter);
         txtDepAmount.setValue(0L); // Giá trị mặc định
 
-        // Ô nhập ngày
         try {
             MaskFormatter dateMask = new MaskFormatter("##/##/####");
             dateMask.setPlaceholderCharacter('_');
@@ -107,7 +105,6 @@ public class AddAccountDialog extends JDialog {
         JPanel panelPayment = new JPanel(new GridLayout(2, 2, 10, 10));
         panelPayment.setBorder(BorderFactory.createTitledBorder("Chi tiết Thanh Toán"));
         txtCardNum = new JTextField();
-        // Áp dụng formatter cho ô Số dư
         txtBalance = new JFormattedTextField(currencyFormatter);
         txtBalance.setValue(0L);
 
@@ -124,9 +121,8 @@ public class AddAccountDialog extends JDialog {
             cl.show(panelCenter, (String) cbType.getSelectedItem());
         });
 
-        // --- 3. BUTTONS ---
         JPanel panelBtn = new JPanel();
-        btnSave = new JButton(isEditMode ? "Cập Nhật" : "Lưu Mới");
+        JButton btnSave = new JButton(isEditMode ? "Cập Nhật" : "Lưu Mới");
         JButton btnCancel = new JButton("Hủy");
 
         btnSave.addActionListener(this::onSave);
@@ -143,9 +139,8 @@ public class AddAccountDialog extends JDialog {
     private void fillData(BankAccount acc) {
         txtCode.setText(acc.getAccountCode());
         txtCode.setEditable(false);
-        txtName.setText(acc.getAccountName());
-
-        CardLayout cl = (CardLayout) panelCenter.getLayout();
+        txtName.setText(acc.getOwnerName());
+        txtCitizenId.setText(acc.getCitizenId());
 
         if (acc instanceof SavingsAccount) {
             SavingsAccount sa = (SavingsAccount) acc;
@@ -156,42 +151,51 @@ public class AddAccountDialog extends JDialog {
             txtDepDate.setText(convertDateToGUI(sa.getDepositDate()));
             txtRate.setText(String.valueOf(sa.getInterestRate()));
             txtTerm.setText(String.valueOf(sa.getTerm()));
-
-            cl.show(panelCenter, "Savings Account");
         } else {
             PaymentAccount pa = (PaymentAccount) acc;
             cbType.setSelectedItem("Payment Account");
             cbType.setEnabled(false);
 
             txtCardNum.setText(pa.getCardNumber());
-
             txtBalance.setValue((long) pa.getBalance());
-
-            cl.show(panelCenter, "Payment Account");
         }
     }
 
     private void onSave(ActionEvent e) {
         String code = txtCode.getText().trim();
         String name = txtName.getText().trim();
+        String cid = txtCitizenId.getText().trim();
         String type = (String) cbType.getSelectedItem();
 
         if (!Validator.isValidAccountCode(code)) {
-            JOptionPane.showMessageDialog(this, "Mã tài khoản phải đủ 9 chữ số!"); return;
+            JOptionPane.showMessageDialog(this, "Mã tài khoản phải đủ 9 chữ số!");
+            return;
         }
         if (Validator.isEmpty(name)) {
-            JOptionPane.showMessageDialog(this, "Tên không được để trống!"); return;
+            JOptionPane.showMessageDialog(this, "Tên không được để trống!");
+            return;
         }
-
+        if (Validator.isEmpty(cid)) { // Validate CCCD
+            JOptionPane.showMessageDialog(this, "Số CCCD không được để trống!");
+            return;
+        }
         if (!isEditMode && accountDAO.isCodeExist(code)) {
-            JOptionPane.showMessageDialog(this, "Mã tài khoản đã tồn tại!"); return;
+            JOptionPane.showMessageDialog(this, "Mã tài khoản đã tồn tại!");
+            return;
         }
-
-        boolean result = false;
 
         try {
+            int idToSave = 0;       // Mặc định là 0 nếu thêm mới
+            int custIdToSave = 0;   // Mặc định là 0 nếu thêm mới
+
+            if (isEditMode && currentAccount != null) {
+                idToSave = currentAccount.getId();             // Lấy lại ID tài khoản
+                custIdToSave = currentAccount.getCustomerId(); // QUAN TRỌNG: Lấy lại ID khách hàng cũ
+            }
+            BankAccount acc = null;
+
             if ("Savings Account".equals(type)) {
-                // getValue() trả về Object (Long), ép kiểu về double an toàn
+                // Lấy giá trị từ Formatter (Trả về Long -> ép sang double)
                 double amount = 0;
                 if (txtDepAmount.getValue() != null) {
                     amount = ((Number) txtDepAmount.getValue()).doubleValue();
@@ -209,23 +213,22 @@ public class AddAccountDialog extends JDialog {
                     return;
                 }
                 if (!Validator.isPositiveNumber(rateStr) || !Validator.isPositiveNumber(termStr)) {
-                    JOptionPane.showMessageDialog(this, "Lãi suất/Kỳ hạn phải dương!"); return;
+                    JOptionPane.showMessageDialog(this, "Lãi suất/Kỳ hạn phải dương!");
+                    return;
                 }
 
                 String sqlDate = convertDateToSQL(dateStr);
-
-                SavingsAccount sa = new SavingsAccount(0, code, name,
+                acc = new SavingsAccount(
+                        idToSave,
+                        code,
+                        custIdToSave,
+                        name,
+                        cid,
                         sqlDate,
-                        amount,
-                        sqlDate,
-                        Double.parseDouble(rateStr), Integer.parseInt(termStr));
-
-                result = isEditMode ? accountDAO.updateAccount(sa) : accountDAO.addAccount(sa);
-
+                        amount, sqlDate, Double.parseDouble(rateStr), Integer.parseInt(termStr)
+                );
             } else {
                 String cardNum = txtCardNum.getText().trim();
-
-                // --- Lấy giá trị số dư ---
                 double balance = 0;
                 if (txtBalance.getValue() != null) {
                     balance = ((Number) txtBalance.getValue()).doubleValue();
@@ -235,21 +238,30 @@ public class AddAccountDialog extends JDialog {
                     JOptionPane.showMessageDialog(this, "Số thẻ không được để trống!"); return;
                 }
 
-                String currentCreationDate = isEditMode ? currentAccount.getCreationDate() : java.time.LocalDate.now().toString();
+                // Ngày tạo tự động
+                String today = java.time.LocalDate.now().toString();
+                String cDate = isEditMode ? currentAccount.getCreationDate() : today;
 
-                PaymentAccount pa = new PaymentAccount(0, code, name, currentCreationDate, cardNum, balance);
-
-                result = isEditMode ? accountDAO.updateAccount(pa) : accountDAO.addAccount(pa);
+                acc = new PaymentAccount(
+                        idToSave,
+                        code,
+                        custIdToSave,
+                        name,
+                        cid,
+                        cDate,
+                        cardNum, balance
+                );
             }
 
-            if (result) {
+            boolean res = isEditMode ? accountDAO.updateAccount(acc) : accountDAO.addAccount(acc);
+
+            if (res) {
                 JOptionPane.showMessageDialog(this, isEditMode ? "Cập nhật thành công!" : "Thêm mới thành công!");
                 isSuccess = true;
                 dispose();
             } else {
                 JOptionPane.showMessageDialog(this, "Lỗi Database! Không thể lưu dữ liệu.");
             }
-
         } catch (Exception ex) {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this, "Lỗi dữ liệu: " + ex.getMessage());

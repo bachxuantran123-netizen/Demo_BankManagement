@@ -3,13 +3,17 @@ package src.Entities;
 public abstract class BankAccount {
     protected int id;
     protected String accountCode;
-    protected String accountName;
+    protected int customerId;
+    protected String ownerName;
+    protected String citizenId;
     protected String creationDate;
 
-    public BankAccount(int id, String accountCode, String accountName, String creationDate) {
+    public BankAccount(int id, String accountCode, int customerId, String ownerName, String citizenId, String creationDate) {
         this.id = id;
         this.accountCode = accountCode;
-        this.accountName = accountName;
+        this.customerId = customerId;
+        this.ownerName = ownerName;
+        this.citizenId = citizenId;
         this.creationDate = creationDate;
     }
 
@@ -19,8 +23,14 @@ public abstract class BankAccount {
     public String getAccountCode() {
         return accountCode;
     }
-    public String getAccountName() {
-        return accountName;
+    public int getCustomerId() {
+        return customerId;
+    }
+    public String getOwnerName() {
+        return ownerName;
+    }
+    public String getCitizenId() {
+        return citizenId;
     }
     public String getCreationDate() {
         return creationDate;
@@ -30,6 +40,6 @@ public abstract class BankAccount {
 
     @Override
     public String toString() {
-        return String.format("| %-4d | %-12s | %-20s | %-12s |", id, accountCode, accountName, creationDate);
+        return String.format("| %-10s | %-20s | %-12s |", accountCode, ownerName, citizenId);
     }
 }
