@@ -1,4 +1,4 @@
-import src.GUI.LoginFrame; // Sửa import
+import src.GUI.LoginFrame;
 import javax.swing.SwingUtilities;
 
 public class App {

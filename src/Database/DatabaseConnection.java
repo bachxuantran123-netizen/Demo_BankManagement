@@ -14,13 +14,9 @@ public class DatabaseConnection {
         try {
             // Kiểm tra Driver
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-
             Connection conn = DriverManager.getConnection(URL);
-
-            // In ra console để biết đã kết nối thành công (Chỉ dùng lúc debug)
             System.out.println("Kết nối SQL Server (Windows Auth) thành công!");
             return conn;
-
         } catch (ClassNotFoundException e) {
             System.err.println("Không tìm thấy Driver!");
             e.printStackTrace();

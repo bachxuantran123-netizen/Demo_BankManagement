@@ -8,7 +8,7 @@ import java.awt.*;
 
 public class LoginFrame extends JFrame {
     private JTextField txtUser;
-    private JPasswordField txtPass; // Dùng PasswordField để che ký tự mật khẩu
+    private JPasswordField txtPass;
     private UserDAO userDAO;
 
     public LoginFrame() {

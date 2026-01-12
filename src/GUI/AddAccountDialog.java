@@ -70,9 +70,9 @@ public class AddAccountDialog extends JDialog {
         format.setGroupingUsed(true);
 
         NumberFormatter currencyFormatter = new NumberFormatter(format);
-        currencyFormatter.setValueClass(Long.class); // Giá trị trả về là Long
-        currencyFormatter.setAllowsInvalid(false);   // Không cho nhập ký tự lạ
-        currencyFormatter.setMinimum(0L);            // Không cho nhập số âm
+        currencyFormatter.setValueClass(Long.class);
+        currencyFormatter.setAllowsInvalid(false);
+        currencyFormatter.setMinimum(0L);
 
         panelCenter = new JPanel(new CardLayout());
         JPanel panelSavings = new JPanel(new GridLayout(4, 2, 10, 10));
@@ -80,7 +80,7 @@ public class AddAccountDialog extends JDialog {
 
         // Áp dụng formatter cho ô Tiền gửi
         txtDepAmount = new JFormattedTextField(currencyFormatter);
-        txtDepAmount.setValue(0L); // Giá trị mặc định
+        txtDepAmount.setValue(0L);
 
         try {
             MaskFormatter dateMask = new MaskFormatter("##/##/####");
@@ -185,17 +185,16 @@ public class AddAccountDialog extends JDialog {
         }
 
         try {
-            int idToSave = 0;       // Mặc định là 0 nếu thêm mới
-            int custIdToSave = 0;   // Mặc định là 0 nếu thêm mới
+            int idToSave = 0;
+            int custIdToSave = 0;
 
             if (isEditMode && currentAccount != null) {
-                idToSave = currentAccount.getId();             // Lấy lại ID tài khoản
-                custIdToSave = currentAccount.getCustomerId(); // QUAN TRỌNG: Lấy lại ID khách hàng cũ
+                idToSave = currentAccount.getId();
+                custIdToSave = currentAccount.getCustomerId();
             }
             BankAccount acc = null;
 
             if ("Savings Account".equals(type)) {
-                // Lấy giá trị từ Formatter (Trả về Long -> ép sang double)
                 double amount = 0;
                 if (txtDepAmount.getValue() != null) {
                     amount = ((Number) txtDepAmount.getValue()).doubleValue();
@@ -206,7 +205,8 @@ public class AddAccountDialog extends JDialog {
                 String termStr = txtTerm.getText().trim();
 
                 if (!Validator.isValidDate(dateStr)) {
-                    JOptionPane.showMessageDialog(this, "Ngày tháng không hợp lệ (dd/MM/yyyy)!"); return;
+                    JOptionPane.showMessageDialog(this, "Ngày tháng không hợp lệ (dd/MM/yyyy)!");
+                    return;
                 }
                 if (Validator.isFutureDate(dateStr)) {
                     JOptionPane.showMessageDialog(this, "Ngày gửi không được lớn hơn ngày hiện tại!");
@@ -235,10 +235,10 @@ public class AddAccountDialog extends JDialog {
                 }
 
                 if (Validator.isEmpty(cardNum)) {
-                    JOptionPane.showMessageDialog(this, "Số thẻ không được để trống!"); return;
+                    JOptionPane.showMessageDialog(this, "Số thẻ không được để trống!");
+                    return;
                 }
 
-                // Ngày tạo tự động
                 String today = java.time.LocalDate.now().toString();
                 String cDate = isEditMode ? currentAccount.getCreationDate() : today;
 

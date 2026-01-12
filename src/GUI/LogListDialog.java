@@ -31,11 +31,10 @@ public class LogListDialog extends JDialog {
         table.setRowHeight(28);
         table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
 
-        // Căn chỉnh độ rộng cột
-        table.getColumnModel().getColumn(0).setPreferredWidth(50);  // ID
-        table.getColumnModel().getColumn(1).setPreferredWidth(120); // Username
-        table.getColumnModel().getColumn(2).setPreferredWidth(450); // Hành động (Rộng nhất)
-        table.getColumnModel().getColumn(3).setPreferredWidth(180); // Thời gian
+        table.getColumnModel().getColumn(0).setPreferredWidth(50);
+        table.getColumnModel().getColumn(1).setPreferredWidth(120);
+        table.getColumnModel().getColumn(2).setPreferredWidth(450);
+        table.getColumnModel().getColumn(3).setPreferredWidth(180);
 
         add(new JScrollPane(table), BorderLayout.CENTER);
 
@@ -51,19 +50,17 @@ public class LogListDialog extends JDialog {
         panelBot.add(btnClose);
         add(panelBot, BorderLayout.SOUTH);
 
-        // 4. Load dữ liệu ngay khi mở
         loadLogs();
     }
 
     private void loadLogs() {
-        // Lấy dữ liệu mới nhất lên đầu (DESC)
         String sql = "SELECT * FROM ActivityLogs ORDER BY log_time DESC";
 
         try (Connection conn = DatabaseConnection.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
-            tableModel.setRowCount(0); // Xóa dữ liệu cũ trên bảng
+            tableModel.setRowCount(0);
             SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
 
             while (rs.next()) {

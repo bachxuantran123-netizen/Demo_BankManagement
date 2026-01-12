@@ -31,14 +31,14 @@ public class MainFrame extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        // --- 1. TIÊU ĐỀ ---
+        // 1. TIÊU ĐỀ
         JLabel lblTitle = new JLabel("QUẢN LÝ TÀI KHOẢN NGÂN HÀNG", JLabel.CENTER);
         lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 26));
         lblTitle.setForeground(new Color(0, 102, 204));
         lblTitle.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
         add(lblTitle, BorderLayout.NORTH);
 
-        // --- 2. BẢNG DỮ LIỆU ---
+        // 2. BẢNG DỮ LIỆU
         String[] columns = {"ID", "Mã TK", "Chủ TK", "CCCD", "Loại TK", "Ngày Tạo", "Chi Tiết 1", "Chi Tiết 2", "Kỳ hạn"};
         tableModel = new DefaultTableModel(columns, 0);
         table = new JTable(tableModel);
@@ -46,17 +46,17 @@ public class MainFrame extends JFrame {
         table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 14));
 
-        table.getColumnModel().getColumn(0).setPreferredWidth(40);  // ID
-        table.getColumnModel().getColumn(1).setPreferredWidth(100); // Mã TK
-        table.getColumnModel().getColumn(2).setPreferredWidth(140); // Tên
-        table.getColumnModel().getColumn(3).setPreferredWidth(100); // CCCD (Mới)
-        table.getColumnModel().getColumn(4).setPreferredWidth(90);  // Loại
-        table.getColumnModel().getColumn(7).setPreferredWidth(60);  // Kỳ hạn
-        table.getColumnModel().getColumn(8).setPreferredWidth(60);  // Kỳ hạn
+        table.getColumnModel().getColumn(0).setPreferredWidth(40);
+        table.getColumnModel().getColumn(1).setPreferredWidth(100);
+        table.getColumnModel().getColumn(2).setPreferredWidth(140);
+        table.getColumnModel().getColumn(3).setPreferredWidth(100);
+        table.getColumnModel().getColumn(4).setPreferredWidth(90);
+        table.getColumnModel().getColumn(7).setPreferredWidth(60);
+        table.getColumnModel().getColumn(8).setPreferredWidth(60);
 
         add(new JScrollPane(table), BorderLayout.CENTER);
 
-        // --- 3. THANH CÔNG CỤ ---
+        // 3. THANH CÔNG CỤ
         JPanel panelBot = new JPanel(new BorderLayout());
         panelBot.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
 
@@ -92,7 +92,7 @@ public class MainFrame extends JFrame {
         panelBot.add(panelAction, BorderLayout.EAST);
         add(panelBot, BorderLayout.SOUTH);
 
-        // --- 4. XỬ LÝ SỰ KIỆN ---
+        // 4. XỬ LÝ SỰ KIỆN
 
         btnLogs.addActionListener(e -> {
             new LogListDialog(this).setVisible(true);
@@ -209,7 +209,7 @@ public class MainFrame extends JFrame {
                     acc.getCreationDate(),
                     "Thẻ: " + pa.getCardNumber(),
                     "Số dư: " + String.format("%,.0f", pa.getBalance()),
-                    "" // Thanh toán không có kỳ hạn nên để trống
+                    ""
             };
         }
         tableModel.addRow(row);

@@ -13,7 +13,7 @@ public class UserDAO {
             pstmt.setString(2, password);
 
             ResultSet rs = pstmt.executeQuery();
-            return rs.next(); // Nếu có dữ liệu trả về -> Đăng nhập đúng
+            return rs.next();
 
         } catch (SQLException e) {
             e.printStackTrace();

@@ -15,11 +15,9 @@ public class AccountDAO {
         String code = rs.getString("account_code");
         String date = rs.getString("creation_date");
         String type = rs.getString("type");
-
-        // LẤY THÔNG TIN TỪ BẢNG CUSTOMERS (Nhờ câu lệnh JOIN)
         int custId = rs.getInt("customer_id");
-        String name = rs.getString("full_name");    // Cột bên Customers
-        String citizenId = rs.getString("citizen_id"); // Cột bên Customers
+        String name = rs.getString("full_name");
+        String citizenId = rs.getString("citizen_id");
 
         if ("SAVINGS".equalsIgnoreCase(type)) {
             return new SavingsAccount(id, code, custId, name, citizenId, date,
@@ -34,10 +32,9 @@ public class AccountDAO {
         }
     }
 
-    // 1. LẤY DANH SÁCH (Sử dụng JOIN)
+    // 1. LẤY DANH SÁCH
     public List<BankAccount> getAllAccounts() {
         List<BankAccount> list = new ArrayList<>();
-        // Query nối bảng Accounts và Customers để lấy đủ thông tin
         String sql = "SELECT a.*, c.full_name, c.citizen_id " +
                 "FROM Accounts a " +
                 "JOIN Customers c ON a.customer_id = c.customer_id";
@@ -45,7 +42,6 @@ public class AccountDAO {
         try (Connection conn = DatabaseConnection.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
-
             while (rs.next()) {
                 list.add(mapRowToAccount(rs));
             }
@@ -55,7 +51,7 @@ public class AccountDAO {
         return list;
     }
 
-    // 2. TÌM KIẾM (Cũng phải JOIN để tìm theo Tên hoặc CCCD)
+    // 2. TÌM KIẾM
     public List<BankAccount> searchAccounts(String keyword) {
         List<BankAccount> list = new ArrayList<>();
         String sql = "SELECT a.*, c.full_name, c.citizen_id FROM Accounts a " +
@@ -79,29 +75,26 @@ public class AccountDAO {
         return list;
     }
 
-    // 3. THÊM TÀI KHOẢN (Logic thông minh: Tự tạo Khách hàng + Transaction)
+    // 3. THÊM TÀI KHOẢN
     public boolean addAccount(BankAccount acc) {
         Connection conn = null;
         try {
             conn = DatabaseConnection.getConnection();
-            conn.setAutoCommit(false); // Bắt đầu Transaction (Quan trọng!)
+            conn.setAutoCommit(false);
 
             int customerId = -1;
 
-            // BƯỚC 1: Kiểm tra xem Khách hàng (theo CCCD) đã có chưa?
             String checkCust = "SELECT customer_id FROM Customers WHERE citizen_id = ?";
             try (PreparedStatement pCheck = conn.prepareStatement(checkCust)) {
                 pCheck.setString(1, acc.getCitizenId());
                 ResultSet rsCheck = pCheck.executeQuery();
                 if (rsCheck.next()) {
-                    customerId = rsCheck.getInt("customer_id"); // Khách cũ -> Lấy ID dùng luôn
+                    customerId = rsCheck.getInt("customer_id");
                 }
             }
 
-            // BƯỚC 2: Nếu chưa có -> Insert vào bảng Customers
             if (customerId == -1) {
                 String insertCust = "INSERT INTO Customers (citizen_id, full_name) VALUES (?, ?)";
-                // RETURN_GENERATED_KEYS để lấy ID vừa tự sinh ra
                 try (PreparedStatement pInsCust = conn.prepareStatement(insertCust, Statement.RETURN_GENERATED_KEYS)) {
                     pInsCust.setString(1, acc.getCitizenId());
                     pInsCust.setString(2, acc.getOwnerName());
@@ -112,16 +105,13 @@ public class AccountDAO {
                 }
             }
 
-            // BƯỚC 3: Insert vào bảng Accounts (Dùng customerId vừa có)
             String sqlAcc = "INSERT INTO Accounts (account_code, customer_id, creation_date, type, " +
                     "deposit_amount, deposit_date, interest_rate, term, card_number, balance) " +
                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             try (PreparedStatement pstmt = conn.prepareStatement(sqlAcc)) {
                 pstmt.setString(1, acc.getAccountCode());
-                pstmt.setInt(2, customerId); // Dùng ID (Foreign Key)
-
-                // Ngày tạo (Lưu ý: Phải đúng chuẩn yyyy-MM-dd từ GUI gửi xuống)
+                pstmt.setInt(2, customerId);
                 String cDate = (acc.getCreationDate() == null) ? java.time.LocalDate.now().toString() : acc.getCreationDate();
                 pstmt.setDate(3, java.sql.Date.valueOf(cDate));
 
@@ -147,21 +137,20 @@ public class AccountDAO {
                 pstmt.executeUpdate();
             }
 
-            // BƯỚC 4: Ghi Log vào bảng ActivityLogs (Tính năng mở rộng)
             String sqlLog = "INSERT INTO ActivityLogs (username, action) VALUES (?, ?)";
             try (PreparedStatement pLog = conn.prepareStatement(sqlLog)) {
-                pLog.setString(1, UserSession.getCurrentUser()); // Tạm thời để admin (hoặc lấy từ UserDAO nếu muốn)
+                pLog.setString(1, UserSession.getCurrentUser());
                 pLog.setString(2, "Thêm tài khoản mới: " + acc.getAccountCode());
                 pLog.executeUpdate();
             }
 
-            conn.commit(); // Chốt tất cả thay đổi
+            conn.commit();
             return true;
 
         } catch (Exception e) {
             try {
                 if (conn != null) conn.rollback();
-            } catch (SQLException ex) {} // Hoàn tác nếu lỗi
+            } catch (SQLException ex) {}
             e.printStackTrace();
             return false;
         } finally {
@@ -172,7 +161,6 @@ public class AccountDAO {
         }
     }
 
-    // 4. CẬP NHẬT (UPDATE) - Cập nhật cả thông tin khách hàng nếu sửa tên
     public boolean updateAccount(BankAccount acc) {
         Connection conn = null;
         try {
@@ -181,7 +169,6 @@ public class AccountDAO {
 
             int targetCustomerId = -1;
 
-            // BƯỚC 1: Kiểm tra CCCD mới nhập vào đã tồn tại chưa?
             String checkSql = "SELECT customer_id FROM Customers WHERE citizen_id = ?";
             try (PreparedStatement pCheck = conn.prepareStatement(checkSql)) {
                 pCheck.setString(1, acc.getCitizenId());
@@ -191,10 +178,7 @@ public class AccountDAO {
                 }
             }
 
-            // BƯỚC 2: Xử lý Khách hàng đích
             if (targetCustomerId != -1) {
-                // Tình huống A: CCCD đã tồn tại (Chuyển nhượng cho người này HOẶC Sửa tên người này)
-                // Ta update lại tên cho người này luôn (đề phòng trường hợp muốn sửa tên)
                 String updateNameSql = "UPDATE Customers SET full_name = ? WHERE customer_id = ?";
                 try (PreparedStatement pUpdName = conn.prepareStatement(updateNameSql)) {
                     pUpdName.setString(1, acc.getOwnerName());
@@ -202,7 +186,6 @@ public class AccountDAO {
                     pUpdName.executeUpdate();
                 }
             } else {
-                // Tình huống B: CCCD chưa tồn tại (Nhập sai CCCD giờ sửa lại -> Tạo người mới)
                 String insertCust = "INSERT INTO Customers (citizen_id, full_name) VALUES (?, ?)";
                 try (PreparedStatement pIns = conn.prepareStatement(insertCust, Statement.RETURN_GENERATED_KEYS)) {
                     pIns.setString(1, acc.getCitizenId());
@@ -213,11 +196,10 @@ public class AccountDAO {
                 }
             }
 
-            // BƯỚC 3: Cập nhật bảng ACCOUNTS (Trỏ sang targetCustomerId mới)
             String sqlAcc = "UPDATE Accounts SET customer_id=?, deposit_amount=?, deposit_date=?, interest_rate=?, term=?, card_number=?, balance=? WHERE account_code=?";
 
             try (PreparedStatement pstmt = conn.prepareStatement(sqlAcc)) {
-                pstmt.setInt(1, targetCustomerId); // <-- KHÓA NGOẠI MỚI (Quan trọng nhất)
+                pstmt.setInt(1, targetCustomerId);
 
                 if (acc instanceof SavingsAccount) {
                     SavingsAccount sa = (SavingsAccount) acc;
@@ -244,7 +226,6 @@ public class AccountDAO {
                 pLog.setString(2, "Cập nhật tài khoản: " + acc.getAccountCode());
                 pLog.executeUpdate();
             }
-
             conn.commit();
             return true;
         } catch (Exception e) {
@@ -261,16 +242,13 @@ public class AccountDAO {
         }
     }
 
-    // 5. XÓA & KIỂM TRA TỒN TẠI
     public void deleteAccount(String code) throws NotFoundBankAccountException {
-        // Xóa bảng Accounts (Database có set ON DELETE CASCADE nên Logs/Transactions tự xử lý nếu có liên kết)
         String sql = "DELETE FROM Accounts WHERE account_code = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, code);
             if (pstmt.executeUpdate() == 0) throw new NotFoundBankAccountException("Không tìm thấy tài khoản!");
 
-            // Ghi Log Xóa
             try (PreparedStatement pLog = conn.prepareStatement("INSERT INTO ActivityLogs (username, action) VALUES (?, ?)")) {
                 pLog.setString(1, UserSession.getCurrentUser());
                 pLog.setString(2, "Đã xóa tài khoản: " + code);

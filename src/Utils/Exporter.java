@@ -6,10 +6,8 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 
 public class Exporter {
-    // Hàm này nhận vào JTable và File, nhiệm vụ chỉ là ghi dữ liệu ra file
     public static void exportTable(JTable table, File file) throws IOException {
         TableModel model = table.getModel();
-
         // Mở file với encoding UTF-8
         try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8))) {
             bw.write('\ufeff');

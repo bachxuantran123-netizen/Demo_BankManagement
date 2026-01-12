@@ -9,12 +9,10 @@ public class Validator {
     private static final String REGEX_ACCOUNT_CODE = "^\\d{9}$";
     private static final String REGEX_DATE = "^\\d{2}/\\d{2}/\\d{4}$";
 
-    // 1. Kiểm tra Mã tài khoản (Chỉ trả về đúng/sai)
     public static boolean isValidAccountCode(String code) {
         return code != null && code.matches(REGEX_ACCOUNT_CODE);
     }
 
-    // 2. Kiểm tra Số dương (Dùng cho tiền, lãi suất...)
     public static boolean isPositiveNumber(String strNum) {
         try {
             double value = Double.parseDouble(strNum);
@@ -24,12 +22,11 @@ public class Validator {
         }
     }
 
-    // 3. Kiểm tra định dạng Ngày tháng
     public static boolean isValidDate(String dateStr) {
-        if (dateStr == null || !dateStr.matches(REGEX_DATE)) return false;
-
+        if (dateStr == null || !dateStr.matches(REGEX_DATE))
+            return false;
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-        sdf.setLenient(false); // Bắt buộc ngày phải tồn tại (vd: không có ngày 30/02)
+        sdf.setLenient(false);
         try {
             sdf.parse(dateStr);
             return true;
@@ -38,10 +35,10 @@ public class Validator {
         }
     }
 
-    // 4. Kiểm tra chuỗi rỗng
     public static boolean isEmpty(String str) {
         return str == null || str.trim().isEmpty();
     }
+
     public static boolean isFutureDate(String dateStr) {
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
         sdf.setLenient(false);
@@ -49,7 +46,6 @@ public class Validator {
             Date inputDate = sdf.parse(dateStr);
             Date today = new Date();
             return inputDate.after(today);
-
         } catch (ParseException e) {
             return false;
         }
