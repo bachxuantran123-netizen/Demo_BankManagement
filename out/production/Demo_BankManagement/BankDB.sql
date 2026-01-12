@@ -6,9 +6,9 @@ CREATE TABLE Users (
     password VARCHAR(50) NOT NULL,
     full_name NVARCHAR(100)
 );
-INSERT INTO Users VALUES ('admin', '123456', N'Quản Trị Viên');
-INSERT INTO Users VALUES ('ceo', '123456', N'Giám Đốc');
-INSERT INTO Users VALUES ('admin1', '123456', N'Nhân Viên');
+INSERT INTO Users VALUES ('admin', '123456', N'Nhân Viên');
+INSERT INTO Users VALUES ('admin1', '123456', N'Nhân Viên 1');
+INSERT INTO Users VALUES ('admin2', '123456', N'Nhân Viên 2');
 GO
 
 CREATE TABLE Customers (
